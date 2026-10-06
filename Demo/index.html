@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>emLearns - Demo</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 32px auto; padding: 0 16px; color: #1f2937; }
+  h1 { margin-bottom: 4px; }
+  .sub { color: #6b7280; margin-top: 0; }
+  button { background: #2563eb; color: #fff; border: 0; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 15px; }
+  #status { margin: 12px 0; font-size: 14px; color: #374151; }
+  .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; margin: 16px 0; }
+  .meta { color: #6b7280; font-size: 14px; }
+  .lesson { background: #f3f4f6; border-radius: 6px; padding: 10px 12px; margin: 8px 0; }
+  .lesson p { margin: 4px 0 0; font-size: 14px; }
+  pre { background: #111827; color: #a7f3d0; padding: 12px; border-radius: 8px; overflow: auto; font-size: 13px; max-height: 300px; }
+</style>
+</head>
+<body>
+  <h1>emLearns</h1>
+  <p class="sub">Encephalo-Myelo Learns: frontend ↔ backend ↔ MySQL demo</p>
+
+  <button onclick="loadCourses()">Load courses from backend</button>
+  <div id="status"></div>
+  <div id="list"></div>
+
+  <h3>Raw JSON from API</h3>
+  <pre id="raw">(not loaded yet)</pre>
+
+  <script>
+    const API = "http://127.0.0.1:8000/api/courses/";
+
+    function esc(text) {
+      const d = document.createElement("div");
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    async function loadCourses() {
+      const status = document.getElementById("status");
+      status.textContent = "Requesting " + API + " ...";
+      try {
+        const res = await fetch(API);
+        const data = await res.json();
+        status.textContent = "HTTP " + res.status + " - " + data.length + " course(s) received";
+        document.getElementById("raw").textContent = JSON.stringify(data, null, 2);
+        document.getElementById("list").innerHTML = data.map(c => `
+          <div class="card">
+            <h2>${esc(c.title)}</h2>
+            <div class="meta">Instructor: ${esc(c.instructor_name)}</div>
+            <p>${esc(c.description)}</p>
+            ${c.lessons.map(l => `
+              <div class="lesson">
+                <strong>${l.order}. ${esc(l.title)}</strong>
+                <p>${esc(l.content)}</p>
+              </div>`).join("")}
+          </div>`).join("");
+      } catch (e) {
+        status.textContent = "Failed: " + e.message + " (Django server chalirahecha?)";
+      }
+    }
+  </script>
+</body>
+</html>
